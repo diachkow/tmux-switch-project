@@ -23,7 +23,7 @@ A tmux plugin to quickly switch between project directories with favorites suppo
 Add to your `tmux.conf`:
 
 ```tmux
-set -g @plugin 'tmux-switch-project'
+set -g @plugin 'diachkow/tmux-switch-project'
 ```
 
 Then press `prefix + I` to install.
