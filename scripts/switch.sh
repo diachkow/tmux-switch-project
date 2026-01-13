@@ -76,8 +76,9 @@ fi
 if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     # Session doesn't exist, create new one
     tmux new-session -d -s "$SESSION_NAME" -c "$SELECTED_DIR" -n nvim
-    tmux new-window -t "$SESSION_NAME":1 -c "$SELECTED_DIR" -n test
-    tmux new-window -t "$SESSION_NAME":2 -c "$SELECTED_DIR" -n root
+    tmux new-window -t "$SESSION_NAME":2 -c "$SELECTED_DIR" -n test
+    tmux new-window -t "$SESSION_NAME":3 -c "$SELECTED_DIR" -n root
+    tmux move-window -s "$SESSION_NAME":0 -t "$SESSION_NAME":1
     tmux switch-client -t "$SESSION_NAME"
     exit 0
 fi
@@ -85,7 +86,7 @@ fi
 # Session exists, check for running processes (non-shell processes)
 RUNNING_PROCESSES=""
 
-for WINDOW_INDEX in 0 1 2; do
+for WINDOW_INDEX in 1 2 3; do
     # Get pane PIDs for this window
     PANE_PIDS=$(tmux list-panes -t "$SESSION_NAME:$WINDOW_INDEX" -F "#{pane_pid}" 2>/dev/null || true)
     
@@ -130,9 +131,10 @@ fi
 
 # Create the new session first (with a temp name)
 tmux new-session -d -s "${SESSION_NAME}_new" -c "$SELECTED_DIR" -n nvim
-tmux new-window -t "${SESSION_NAME}_new":1 -c "$SELECTED_DIR" -n test
-tmux new-window -t "${SESSION_NAME}_new":2 -c "$SELECTED_DIR" -n root
-tmux select-window -t "${SESSION_NAME}_new":0
+tmux new-window -t "${SESSION_NAME}_new":2 -c "$SELECTED_DIR" -n test
+tmux new-window -t "${SESSION_NAME}_new":3 -c "$SELECTED_DIR" -n root
+tmux move-window -s "${SESSION_NAME}_new":0 -t "${SESSION_NAME}_new":1
+tmux select-window -t "${SESSION_NAME}_new":1
 
 # Switch to the new session, then kill the old one, then rename
 tmux switch-client -t "${SESSION_NAME}_new"
