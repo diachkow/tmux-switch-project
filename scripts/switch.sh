@@ -16,20 +16,59 @@ get_project_list() {
             [ -d "$fav" ] && echo "★ $fav"
         done < "$FAVORITES_FILE"
     fi
-    # Then show all git repos
+    # Then show all project directories (git repos, npm projects, python projects)
     for dir in "${PROJECT_DIRS_ARRAY[@]}"; do
-        [ -d "$dir" ] && fd --type d --hidden --no-ignore "^\.git$" "$dir" --max-depth 5 \
-            --exclude node_modules \
-            --exclude .venv \
-            --exclude venv \
-            --exclude .cache \
-            --exclude vendor \
-            --exclude .npm \
-            --exclude .cargo \
-            --exclude .rustup \
-            --exclude go/pkg \
-            2>/dev/null
-    done | xargs -I{} dirname {} | sort -u
+        if [ -d "$dir" ]; then
+            # Find .git directories
+            fd --type d --hidden --no-ignore "^\.git$" "$dir" --max-depth 5 \
+                --exclude node_modules \
+                --exclude .venv \
+                --exclude venv \
+                --exclude .cache \
+                --exclude vendor \
+                --exclude .npm \
+                --exclude .cargo \
+                --exclude .rustup \
+                --exclude go/pkg \
+                2>/dev/null | xargs -I{} dirname {}
+            # Find package.json files (npm/bun projects)
+            fd --type f --no-ignore "^package\.json$" "$dir" --max-depth 5 \
+                --exclude node_modules \
+                --exclude .venv \
+                --exclude venv \
+                --exclude .cache \
+                --exclude vendor \
+                --exclude .npm \
+                --exclude .cargo \
+                --exclude .rustup \
+                --exclude go/pkg \
+                2>/dev/null | xargs -I{} dirname {}
+            # Find pyproject.toml files (Python projects)
+            fd --type f --no-ignore "^pyproject\.toml$" "$dir" --max-depth 5 \
+                --exclude node_modules \
+                --exclude .venv \
+                --exclude venv \
+                --exclude .cache \
+                --exclude vendor \
+                --exclude .npm \
+                --exclude .cargo \
+                --exclude .rustup \
+                --exclude go/pkg \
+                2>/dev/null | xargs -I{} dirname {}
+            # Find go.sum files (Go projects)
+            fd --type f --no-ignore "^go\.sum$" "$dir" --max-depth 5 \
+                --exclude node_modules \
+                --exclude .venv \
+                --exclude venv \
+                --exclude .cache \
+                --exclude vendor \
+                --exclude .npm \
+                --exclude .cargo \
+                --exclude .rustup \
+                --exclude go/pkg \
+                2>/dev/null | xargs -I{} dirname {}
+        fi
+    done | sort -u
 }
 
 # Export for use in fzf reload
@@ -48,10 +87,21 @@ SELECTED_DIR=$(get_project_list | fzf \
             done < \"$FAVORITES_FILE\"
         fi
         for dir in $PROJECT_DIRS; do
-            [ -d \"\$dir\" ] && fd --type d --hidden --no-ignore '^\.git$' \"\$dir\" --max-depth 5 \
-                --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
-                --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null
-        done | xargs -I{} dirname {} | sort -u
+            if [ -d \"\$dir\" ]; then
+                fd --type d --hidden --no-ignore '^\.git$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^package\.json$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^pyproject\.toml$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^go\.sum$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+            fi
+        done | sort -u
     )" \
     --bind "ctrl-d:execute-silent([ -f \"$FAVORITES_FILE\" ] && grep -v \"^\$(echo {} | sed 's/^★ //')$\" \"$FAVORITES_FILE\" > \"$FAVORITES_FILE.tmp\" && mv \"$FAVORITES_FILE.tmp\" \"$FAVORITES_FILE\")+reload(
         if [ -f \"$FAVORITES_FILE\" ]; then
@@ -60,10 +110,21 @@ SELECTED_DIR=$(get_project_list | fzf \
             done < \"$FAVORITES_FILE\"
         fi
         for dir in $PROJECT_DIRS; do
-            [ -d \"\$dir\" ] && fd --type d --hidden --no-ignore '^\.git$' \"\$dir\" --max-depth 5 \
-                --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
-                --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null
-        done | xargs -I{} dirname {} | sort -u
+            if [ -d \"\$dir\" ]; then
+                fd --type d --hidden --no-ignore '^\.git$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^package\.json$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^pyproject\.toml$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+                fd --type f --no-ignore '^go\.sum$' \"\$dir\" --max-depth 5 \
+                    --exclude node_modules --exclude .venv --exclude venv --exclude .cache \
+                    --exclude vendor --exclude .npm --exclude .cargo --exclude .rustup --exclude go/pkg 2>/dev/null | xargs -I{} dirname {}
+            fi
+        done | sort -u
     )" \
     --header 'ctrl-f: add favorite | ctrl-d: remove favorite' \
     | sed 's/^★ //')
